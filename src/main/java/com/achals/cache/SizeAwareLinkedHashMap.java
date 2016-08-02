@@ -22,7 +22,9 @@ public class SizeAwareLinkedHashMap<K, V> extends LinkedHashMap
 
     public void decrementMaxSize()
     {
-        this.maxSize--;
+        if (this.maxSize > 1) {
+            this.maxSize--;
+        }
     }
 
     public void incrementMaxSize()
