@@ -1,14 +1,14 @@
 package com.achals.cache;
 
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheStats;
+import com.google.common.collect.ImmutableMap;
+
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutionException;
-
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheStats;
-import com.google.common.collect.ImmutableMap;
 
 /**
  * Created by achalshah on 7/29/16.
@@ -66,7 +66,27 @@ public class AdaptiveReplacementCache<K, V> implements Cache
 
     public void put(Object key, Object value)
     {
-
+        if (this.LFU.containsKey(key)) {
+            this.LFU.put(key, value);
+            return;
+        }
+        if (this.LRU.containsKey(key)) {
+            this.LRU.remove(key);
+            this.LFU.put(key, value);
+            return;
+        }
+        if (this.ghostLRU.contains(key)) {
+            this.LRU.incrementMaxSize();
+            this.LFU.decrementMaxSize();
+            this.LRU.put(key, value);
+            return;
+        }
+        if (this.ghostLFU.contains(key)) {
+            this.LRU.decrementMaxSize();
+            this.LFU.incrementMaxSize();
+            this.LFU.put(key, value);
+            return;
+        }
     }
 
     public void putAll(Map m)
@@ -80,15 +100,12 @@ public class AdaptiveReplacementCache<K, V> implements Cache
 
     public void invalidate(Object key)
     {
-
+        // ARC doesn't do invalidation, so I'm leaving out an implementation.
     }
 
     public void invalidateAll()
     {
-        this.ghostLRU.clear();
-        this.LRU.clear();
-        this.LFU.clear();
-        this.ghostLFU.clear();
+        // ARC doesn't do invalidation, so I'm leaving out an implementation.
     }
 
     public long size()
@@ -113,12 +130,24 @@ public class AdaptiveReplacementCache<K, V> implements Cache
 
     public void invalidateAll(Iterable keys)
     {
-
+        // ARC doesn't do invalidation, so I'm leaving out an implementation.
     }
 
     public ImmutableMap getAllPresent(Iterable keys)
     {
-        return null;
+        final ImmutableMap.Builder<K, V> builder = ImmutableMap.builder();
+        for (final Object key: keys)
+        {
+            if (this.LRU.containsKey(key))
+            {
+                builder.put((K) key, (V) this.LRU.get(key));
+            }
+            if (this.LFU.containsKey(key))
+            {
+                builder.put((K) key, (V) this.LFU.get(key));
+            }
+        }
+        return builder.build();
     }
 
     private Optional<V> getFromMaps(final Object key)
