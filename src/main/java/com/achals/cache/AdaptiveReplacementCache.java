@@ -1,7 +1,5 @@
 package com.achals.cache;
 
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.Callable;
@@ -20,21 +18,25 @@ public class AdaptiveReplacementCache<K, V> implements Cache
     private final int maxCacheSize;
 
     private int targetLRUSize;
+    private int targetLFUSize;
 
-    private final HashSet<K> ghostLFU;
-    private final HashMap<K, V> LFU;
-    private final HashMap<K, V> LRU;
-    private final HashSet<K> ghostLRU;
+    private final SizeAwareLinkedHashSet<K> ghostLFU;
+    private final SizeAwareLinkedHashMap<K, V> LFU;
+
+    private final SizeAwareLinkedHashSet<K> ghostLRU;
+    private final SizeAwareLinkedHashMap<K, V> LRU;
 
     public AdaptiveReplacementCache(final int cacheSize)
     {
         this.maxCacheSize = cacheSize;
         this.targetLRUSize = cacheSize / 2;
+        this.targetLFUSize = cacheSize / 2;
 
-        this.ghostLFU = new HashSet<K>();
-        this.LFU = new HashMap<K, V>();
-        this.LRU = new HashMap<K, V>();
-        this.ghostLRU = new HashSet<K>();
+        this.ghostLFU = new SizeAwareLinkedHashSet<>(this.targetLFUSize);
+        this.LFU = new SizeAwareLinkedHashMap<>(this.targetLFUSize, this.ghostLFU);
+
+        this.ghostLRU = new SizeAwareLinkedHashSet<>(this.targetLRUSize);
+        this.LRU = new SizeAwareLinkedHashMap<>(this.targetLRUSize, this.ghostLRU);
     }
 
     public Object getIfPresent(Object key)
@@ -67,10 +69,11 @@ public class AdaptiveReplacementCache<K, V> implements Cache
 
     }
 
-    public void putAll(Map<K, V> m)
+    public void putAll(Map m)
     {
-        for (final Map.Entry<K, V> entry: m.entrySet())
+        for (final Object object : m.entrySet())
         {
+            final Map.Entry<K, V> entry = (Map.Entry<K, V>) object;
             this.put(entry.getKey(), entry.getValue());
         }
     }
@@ -82,12 +85,15 @@ public class AdaptiveReplacementCache<K, V> implements Cache
 
     public void invalidateAll()
     {
-
+        this.ghostLRU.clear();
+        this.LRU.clear();
+        this.LFU.clear();
+        this.ghostLFU.clear();
     }
 
     public long size()
     {
-        return 0;
+        return this.LFU.size() + this.LRU.size();
     }
 
     public CacheStats stats()
@@ -120,11 +126,11 @@ public class AdaptiveReplacementCache<K, V> implements Cache
         final V value;
         if (this.LFU.containsKey(key))
         {
-            value = this.LFU.get(key);
+            value = (V) this.LRU.get(key);
         }
         else if (this.LRU.containsKey(key))
         {
-            value = this.LRU.get(key);
+            value = (V) this.LRU.get(key);
         }
         else
         {
