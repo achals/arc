@@ -20,19 +20,11 @@ public class SizeAwareLinkedHashSet<K> extends LinkedHashSet
     public boolean add(Object o)
     {
         final boolean addStatus = super.add(o);
-        if (this.size() > this.maxSize)
+        while (this.size() > this.maxSize)
         {
             final Iterator<K> iter = this.iterator();
-            int i = 0;
-            while (iter.hasNext() && i < this.maxSize)
-            {
-                i++;
-                iter.next();
-            }
-            while(iter.hasNext())
-            {
-                iter.remove();
-            }
+            iter.next();
+            iter.remove();
         }
         return addStatus;
     }
