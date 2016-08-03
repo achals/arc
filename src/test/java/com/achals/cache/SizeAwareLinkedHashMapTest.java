@@ -3,6 +3,7 @@ package com.achals.cache;
 import static org.junit.Assert.*;
 
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Set;
 
 import org.junit.Before;
@@ -42,5 +43,9 @@ public class SizeAwareLinkedHashMapTest
         assertEquals((Integer) 2, this.map.get(2));
         assertEquals((Integer) 3, this.map.get(3));
         assertTrue(this.ghostSet.contains(1));
+
+        final Iterator<Integer> iter = this.map.keySet().iterator();
+        assertTrue(iter.hasNext());
+        assertEquals((Integer) 2, iter.next());
     }
 }
