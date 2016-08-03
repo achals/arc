@@ -66,25 +66,26 @@ public class AdaptiveReplacementCache<K, V> implements Cache
 
     public void put(Object key, Object value)
     {
+
         if (this.LFU.containsKey(key)) {
-            this.LFU.put(key, value);
+            this.LFU.put((K) key, (V) value);
             return;
         }
         if (this.LRU.containsKey(key)) {
             this.LRU.remove(key);
-            this.LFU.put(key, value);
+            this.LFU.put((K) key, (V) value);
             return;
         }
         if (this.ghostLRU.contains(key)) {
             this.LRU.incrementMaxSize();
             this.LFU.decrementMaxSize();
-            this.LRU.put(key, value);
+            this.LRU.put((K) key, (V) value);
             return;
         }
         if (this.ghostLFU.contains(key)) {
             this.LRU.decrementMaxSize();
             this.LFU.incrementMaxSize();
-            this.LFU.put(key, value);
+            this.LFU.put((K) key, (V) value);
             return;
         }
     }

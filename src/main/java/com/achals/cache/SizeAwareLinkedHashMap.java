@@ -7,7 +7,7 @@ import java.util.Set;
 /**
  * Created by achalshah on 8/1/16.
  */
-public class SizeAwareLinkedHashMap<K, V> extends LinkedHashMap
+public class SizeAwareLinkedHashMap<K, V> extends LinkedHashMap<K, V>
 {
     private int maxSize;
     private Set<K> ghostSet;
@@ -15,7 +15,7 @@ public class SizeAwareLinkedHashMap<K, V> extends LinkedHashMap
     public SizeAwareLinkedHashMap(final int targetSize,
                                   final Set<K> ghostSet)
     {
-        super();
+        super(targetSize);
         this.maxSize = targetSize;
         this.ghostSet = ghostSet;
     }
@@ -38,6 +38,7 @@ public class SizeAwareLinkedHashMap<K, V> extends LinkedHashMap
         if (this.size() > maxSize)
         {
             this.ghostSet.add((K) eldest.getKey());
+            return true;
         }
         return false;
     }
