@@ -1,5 +1,6 @@
 package com.achals.cache;
 
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
@@ -24,6 +25,12 @@ public class SizeAwareLinkedHashMap<K, V> extends LinkedHashMap<K, V>
     {
         if (this.maxSize > 1) {
             this.maxSize--;
+        }
+        final Iterator<Map.Entry<K, V>> iterator = this.entrySet().iterator();
+        while (iterator.hasNext() && this.size() > this.maxSize) {
+            final Map.Entry<K, V> entry = iterator.next();
+            this.ghostSet.add(entry.getKey());
+            iterator.remove();
         }
     }
 
