@@ -1,9 +1,9 @@
 package com.achals.cache;
 
-import static org.junit.Assert.*;
-
 import org.junit.Before;
 import org.junit.Test;
+
+import static org.junit.Assert.*;
 
 /**
  * Created by achal on 8/3/16.
@@ -54,5 +54,105 @@ public class AdaptiveReplacementCacheTest {
         assertFalse(this.LRU.containsKey(1));
         assertEquals((Integer) 1, this.LFU.get(1));
     }
+
+    @Test
+    public void test_put_new_to_ghost_LRU () {
+        for (int i = 0; i < 4; i++) {
+            this.cache.put(i, i);
+        }
+
+        assertTrue(this.LFU.isEmpty());
+        assertEquals(2, this.LRU.size());
+        assertEquals(2, this.ghostLRU.size());
+
+        assertTrue(this.ghostLRU.contains(0));
+        assertTrue(this.ghostLRU.contains(1));
+
+        assertEquals(2, this.cache.getIfPresent(2));
+        assertEquals(3, this.cache.getIfPresent(3));
+    }
+
+    @Test
+    public void test_put_same_to_ghost_LRU () {
+        for (int i = 0; i < 4; i++) {
+            this.cache.put(i, i);
+            this.cache.put(i, i);
+        }
+
+        assertTrue(this.LRU.isEmpty());
+        assertEquals(2, this.LFU.size());
+        assertEquals(2, this.ghostLFU.size());
+
+        assertTrue(this.ghostLFU.contains(0));
+        assertTrue(this.ghostLFU.contains(1));
+
+        assertEquals(2, this.cache.getIfPresent(2));
+        assertEquals(3, this.cache.getIfPresent(3));
+    }
+
+    @Test
+    public void test_put_add_to_LFU_readd () {
+        this.cache.put(1, 1);
+        this.cache.put(1, 1);
+        this.cache.put(2, 2);
+        this.cache.put(2, 2);
+
+        assertEquals(2, this.LFU.size());
+        assertEquals(1, this.cache.getIfPresent(1));
+        assertEquals(2, this.cache.getIfPresent(2));
+
+        this.cache.put(1, 1);
+        this.cache.put(3, 3);
+        this.cache.put(3, 3);
+
+        assertEquals(2, this.LFU.size());
+        assertEquals(1, this.cache.getIfPresent(1));
+        assertEquals(3, this.cache.getIfPresent(3));
+
+        assertTrue(this.ghostLFU.contains(2));
+    }
+
+    @Test
+    public void test_put_add_to_ghostLRU_readd () {
+        this.cache.put(1, 1);
+        this.cache.put(2, 2);
+        this.cache.put(3, 3);
+
+        assertEquals(2, this.LRU.size());
+        assertEquals(3, this.cache.getIfPresent(3));
+        assertEquals(2, this.cache.getIfPresent(2));
+
+        this.cache.put(1, 1);
+
+        assertEquals(3, this.LRU.size());
+        assertEquals(1, this.cache.getIfPresent(1));
+        assertEquals(2, this.cache.getIfPresent(2));
+        assertEquals(3, this.cache.getIfPresent(3));
+
+        assertTrue(this.ghostLRU.isEmpty());
+    }
+
+    @Test
+    public void test_put_add_to_ghostLFU_readd () {
+        for (int i = 1; i <= 3; i++) {
+            this.cache.put(i, i);
+            this.cache.put(i, i);
+        }
+
+        assertTrue(this.LRU.isEmpty());
+        assertEquals(2, this.LFU.size());
+        assertEquals(3, this.cache.getIfPresent(3));
+        assertEquals(2, this.cache.getIfPresent(2));
+
+        this.cache.put(1, 1);
+
+        assertEquals(3, this.LFU.size());
+        assertEquals(1, this.cache.getIfPresent(1));
+        assertEquals(2, this.cache.getIfPresent(2));
+        assertEquals(3, this.cache.getIfPresent(3));
+
+        assertTrue(this.ghostLFU.isEmpty());
+    }
+
 }
 

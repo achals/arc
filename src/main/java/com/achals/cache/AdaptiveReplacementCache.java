@@ -88,12 +88,14 @@ public class AdaptiveReplacementCache<K, V> implements Cache {
         if (this.ghostLRU.contains(key)) {
             this.LRU.incrementMaxSize();
             this.LFU.decrementMaxSize();
+            this.ghostLRU.remove(key);
             this.LRU.put((K) key, (V) value);
             return;
         }
         if (this.ghostLFU.contains(key)) {
             this.LRU.decrementMaxSize();
             this.LFU.incrementMaxSize();
+            this.ghostLFU.remove(key);
             this.LFU.put((K) key, (V) value);
             return;
         }
