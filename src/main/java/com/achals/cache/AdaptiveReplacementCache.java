@@ -59,7 +59,7 @@ public class AdaptiveReplacementCache<K, V> implements Cache {
         return null;
     }
 
-    public Object get (Object key, Callable valueLoader) throws ExecutionException {
+    public Object get (final Object key, final Callable valueLoader) throws ExecutionException {
         final Optional<V> optionalCachedValue = this.getFromMaps(key);
         if (optionalCachedValue.isPresent()) {
             return optionalCachedValue.get();
