@@ -3,8 +3,11 @@ package com.achals.cache;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
+import java.util.jar.Pack200;
 
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
@@ -195,5 +198,16 @@ public class AdaptiveReplacementCacheTest {
         this.cache.get(1, callable);
     }
 
+    @Test
+    public void test_putall()
+    {
+        final Map<Integer, Integer> inputMap = new HashMap<>();
+        inputMap.put(1, 1);
+        inputMap.put(2, 2);
+
+        this.cache.putAll(inputMap);
+        assertEquals(1, this.cache.getIfPresent(1));
+        assertEquals(2, this.cache.getIfPresent(2));
+    }
 }
 

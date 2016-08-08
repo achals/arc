@@ -52,8 +52,7 @@ public class AdaptiveReplacementCache<K, V> implements Cache {
 
     public Object getIfPresent (Object key) {
         final Optional<V> optionalVal = this.getFromMaps(key);
-        if (optionalVal.isPresent())
-        {
+        if (optionalVal.isPresent()) {
             return optionalVal.get();
         }
         return null;
@@ -110,11 +109,22 @@ public class AdaptiveReplacementCache<K, V> implements Cache {
     }
 
     public void invalidate (Object key) {
-        // ARC doesn't do invalidation, so I'm leaving out an implementation.
+        if (this.LRU.containsKey(key)) {
+            this.LRU.remove(key);
+        } else if (this.LFU.containsKey(key)) {
+            this.LFU.remove(key);
+        } else if (this.ghostLRU.contains(key)) {
+            this.ghostLRU.remove(key);
+        } else if (this.ghostLFU.contains(key)) {
+            this.ghostLFU.remove(key);
+        }
     }
 
     public void invalidateAll () {
-        // ARC doesn't do invalidation, so I'm leaving out an implementation.
+        this.ghostLFU.clear();
+        this.LFU.clear();
+        this.LRU.clear();
+        this.ghostLRU.clear();
     }
 
     public long size () {
@@ -134,7 +144,9 @@ public class AdaptiveReplacementCache<K, V> implements Cache {
     }
 
     public void invalidateAll (Iterable keys) {
-        // ARC doesn't do invalidation, so I'm leaving out an implementation.
+        for (final Object key: keys) {
+            this.invalidate(key);
+        }
     }
 
     public ImmutableMap getAllPresent (Iterable keys) {
